@@ -27,52 +27,27 @@ class Header:
     EF_CUDA_VIRTUAL_SM = 0xFF0000
 
     def __init__(self, iterable=(), **kwargs):
-        # ELF文件头 按顺序
-        # ELF file magic number: 0x7f E L F
-        self.ei_mag = self.ELFMAG  # uint8_t[4]
-        # architecture: 32-bit | 64-bit
-        self.ei_class = self.ELFCLASS64  # uint8_t
-        # data encoding: little-endian
-        self.ei_data = self.ELFDATA2LSB  # uint8_t
-        # version 1
-        self.ei_version = self.EV_CURRENT  # uint8_t
-        # ABI: CUDA 0x33
-        self.ei_osabi = self.ELFOSABI_CUDA  # uint8_t
-        # ABIVERSION: 7
-        self.ei_abiversion = self.CUDA_ABIVERSION  # uint8_t
-        # zero padding
-        self.ei_pad = b'\0' * 7  # uint8_t[7]
-        # EXEC
-        self.e_type = self.ET_EXEC  # uint16_t
-        # CUDA
-        self.e_machine = self.EM_CUDA  # uint16_t
-        # CUDA version
-        self.e_version = 102  # uint32_t
-        # virtual address to entry point, Always 0 for cubin
-        self.e_entry = 0  # Elf32: uint32_t | Elf64: uint64_t
-        # the program header table's file offset in bytes
-        self.e_phoff = 0  # Elf32: uint32_t | Elf64: uint64_t
-        # the section header table's file offset in bytes
-        self.e_shoff = 0  # Elf32: uint32_t | Elf64: uint64_t
-        # flags&0xFF 对应nvcc的code=sm_{xx} 50 61 70 75 等等
-        # flags&0xFF0000 对应nvcc的arch=compute_{xx} 50 61 70 75 等等
-        # flags&0x1F00 5个标志位，见前面EF_CUDA_*定义
-        # 剩下的11位好像未使用
-        self.e_flags = 0x0500  # uint32_t
-        # ELF Header size: Elf64: 64 Bytes | Elf32: 52 Bytes
-        self.e_ehsize = 64  # uint16_t
-        # program header's size in bytes
-        self.e_phentsize = 56  # uint16_t
-        # number of entries in the program header table
-        self.e_phnum = 0  # uint16_t
-        # sections header's size in bytes
-        self.e_shentsize = 64  # uint16_t
-        # number of entries in the section header table
-        self.e_shnum = 0  # uint16_t
-        # section name string table index
-        self.e_shstrndx = 1  # uint16_t
+        self.ei_mag = self.ELFMAG
+        self.ei_class = self.ELFCLASS64
+        self.ei_data = self.ELFDATA2LSB
+        self.ei_version = self.EV_CURRENT
+        self.ei_osabi = self.ELFOSABI_CUDA
+        self.ei_abiversion = self.CUDA_ABIVERSION
+        self.ei_pad = b'\0' * 7
+        self.e_type = self.ET_EXEC
+        self.e_machine = self.EM_CUDA
+        self.e_version = 102
+        self.e_entry = 0
+        self.e_phoff = 0
+        self.e_shoff = 0
+        self.e_flags = 0x0500
+        self.e_ehsize = 64
+        self.e_phentsize = 56
+        self.e_phnum = 0
+        self.e_shentsize = 64
+        self.e_shnum = 0
+        self.e_shstrndx = 1
 
-        # 其他变量
         self.arch = 61
         self.virtual_arch = 61
         self.address_size = 64
@@ -190,36 +165,17 @@ class Section:
     SHF_VAL = {val: key for (key, val) in SHF_STR.items()}
 
     def __init__(self, iterable=(), **kwargs):
-        # Section Header size: Elf64: 64 Bytes | Elf32: 40 Bytes
-        # section header string table index
-        self.sh_name = 0  # uint32_t
-        # the section categorize
-        self.sh_type = 0  # uint32_t
-        # attributes
-        # 对于.text.{kernel}, (sh_flags & 0x01f00000) >> 20 是 bar_count
-        self.sh_flags = 0  # Elf32: uint32_t | Elf64: uint64_t
-        # memory address, always zero
-        self.sh_addr = 0  # Elf32: uint32_t | Elf64: uint64_t
-        # file offset
-        self.sh_offset = 0  # Elf32: uint32_t | Elf64: uint64_t
-        # section's size in bytes
-        self.sh_size = 0  # Elf32: uint32_t | Elf64: uint64_t
-        # section header table index link
-        # .symtab 指向它的.strtab
-        # .nv.info*和.text指向.symtab（猜测，都是3，.symtab也刚好是3）
-        # 其它的为0
-        self.sh_link = 0  # uint32_t
-        # extra information
-        # 对于.text.{kernel}, (sh_info & 0xff000000) >> 24 是 reg_count, 低位是symbol_table的index
-        # 对于.*.{kernel}, sh_info 是 section header table index，指向对应的kernel
-        # 对于.symtab，sh_info 是 The first global symbol index,但是cubin里面是 index-1
-        self.sh_info = 0  # uint32_t
-        # address alignment
-        self.sh_addralign = 0  # Elf32: uint32_t | Elf64: uint64_t
-        # entry size
-        self.sh_entsize = 0  # Elf32: uint32_t | Elf64: uint64_t
+        self.sh_name = 0
+        self.sh_type = 0
+        self.sh_flags = 0
+        self.sh_addr = 0
+        self.sh_offset = 0
+        self.sh_size = 0
+        self.sh_link = 0
+        self.sh_info = 0
+        self.sh_addralign = 0
+        self.sh_entsize = 0
 
-        # 其他变量
         self.index = 0
         self.name = b''
         self.data = b''
@@ -300,13 +256,6 @@ class Symbol:
     STV_VAL = {val: key for (key, val) in STV_STR.items()}
 
     def __init__(self, iterable=(), **kwargs):
-        # String  table  sections size: Elf64: 24 Bytes | Elf32: 16 Bytes
-        # Elf32_Sym:     uint32_t      st_name;
-        #                Elf32_Addr    st_value;
-        #                uint32_t      st_size;
-        #                unsigned char st_info;
-        #                unsigned char st_other;
-        #                uint16_t      st_shndx;
 
         # 指向字符串表的索引值
         self.st_name = 0  # uint32_t
@@ -406,11 +355,9 @@ class RelocationAdd:
     R_TYPE_VAL_75 = {val: key for (key, val) in R_TYPE_75.items()}
 
     def __init__(self, iterable=(), **kwargs):
-        # the virtual address of the storage unit affected by the relocation.
-        self.r_offset = 0  # Elf32: uint32_t | Elf64: uint64_t
-        # symbol table index(Elf32: 8-16位 | Elf64: 高32位) and type(Elf32: 低8位 | Elf64: 低32位)
-        self.r_info = 0  # Elf32: uint32_t | Elf64: uint64_t
-        self.r_addend = 0  # Elf32: int32_t | Elf64: int64_t
+        self.r_offset = 0
+        self.r_info = 0
+        self.r_addend = 0
 
         # 其他变量
         # Symbol表编号
@@ -442,34 +389,14 @@ class Program:
     PF_VAL = {val: key for (key, val) in PF_STR.items()}
 
     def __init__(self, iterable=(), **kwargs):
-        # Program Header size: Elf64: 56 Bytes | Elf32: 32 Bytes
-        # Elf32_Phdr:    uint32_t   p_type;
-        #                Elf32_Off  p_offset;
-        #                Elf32_Addr p_vaddr;
-        #                Elf32_Addr p_paddr;
-        #                uint32_t   p_filesz;
-        #                uint32_t   p_memsz;
-        #                uint32_t   p_flags;
-        #                uint32_t   p_align;
-
-        # what kind of segment:
-        # 1 - LOAD: loadable segment
-        # 6 - PHDR: program header table
-        self.p_type = 0  # uint32_t
-        # a bit mask of flags: 0x4 - PF_R; 0x2 - PF_W; 0x1 - PF_X;
-        self.p_flags = 0  # uint32_t
-        # the offset from the beginning of the file at which the first byte of the segment resides
-        self.p_offset = 0  # uint64_t
-        # virtual address, always zero
-        self.p_vaddr = 0  # uint64_t
-        # physical address, always zero
-        self.p_paddr = 0  # uint64_t
-        # number of bytes in the file image of the segment
-        self.p_filesz = 0  # uint64_t
-        # number of bytes in the memory image of the segment. shared = 0
-        self.p_memsz = 0  # uint64_t
-        # bytes aligned in memory and in the file
-        self.p_align = 8  # uint64_t
+        self.p_type = 0
+        self.p_flags = 0
+        self.p_offset = 0
+        self.p_vaddr = 0
+        self.p_paddr = 0
+        self.p_filesz = 0
+        self.p_memsz = 0
+        self.p_align = 8
 
         # 其它变量
         self.section_mapping = []
